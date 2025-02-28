@@ -4,6 +4,7 @@ export type AppConfiguration = Readonly<{
     appDescription: string;
     appThemeColor: string;
     SRGHBranding: boolean;
+    initialAdmins: string[];
     collectInterest: boolean;
     maxInterests: number | null;
     interestsCTA: string | null;

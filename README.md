@@ -73,6 +73,10 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
         appThemeColor: "#001c2e",
         SRGHBranding: true, // Jedná se o akci SRGH
 
+        initialAdmins: [ // Maily uživatelů, kteří automaticky dostanou přiřazenu roli administrátora
+            "kostkaj@gytool.cz"
+        ],
+
         collectInterest: true, // Předběžný průzkum zájmu
         maxInterests: 2, // Maximální počet zájmů na uživatele
         interestsCTA:
@@ -106,8 +110,7 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
     MICROSOFT_TENANT_ID="d2a20c68-200c-40fa-be20-86101df00e2f"
     ```
 
-> [!TIP]
-> **Base_URL:** Adresa, kde je systém hostován\
+> [!TIP] > **Base_URL:** Adresa, kde je systém hostován\
 > **DATABASE_URL:** URL postgres databáze\
 > **AUTH_SECRET:** Secret používaný pro podepisování autentizačních tokenů\
 > **AUTH_CALLBACK_URL:** Adresa, nastavená v Microsoft Entra ID, kam jsou uživatelé přesměrování po přihlášení (https://portal.azure.com -> Entra ID -> App registrations -> Manage -> Authentication -> Web -> Redirect URIs)\
@@ -132,7 +135,6 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
     ```bash
     pnpm start
     ```
-
 
 > [!TIP]
 > (Pro trvalý hosting doporučuji pm2)

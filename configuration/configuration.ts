@@ -7,6 +7,8 @@ export const configuration: AppConfiguration = {
     appThemeColor: "#001c2e",
     SRGHBranding: true,
 
+    initialAdmins: ["kostkaj@gytool.cz"],
+
     collectInterest: true,
     maxInterests: 2,
     interestsCTA:
