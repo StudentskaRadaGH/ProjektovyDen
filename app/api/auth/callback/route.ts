@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
         const colors = getColorsFromString(userInfo.displayName);
+        const isAdmin = configuration.initialAdmins.includes(userInfo.mail);
 
         const newUser = await db
             .insert(users)
@@ -77,6 +78,7 @@ export async function GET(req: NextRequest) {
                 name: userInfo.displayName,
                 email: userInfo.mail,
                 colors,
+                isAdmin,
             })
             .returning({ insertedId: users.id });
 
@@ -90,7 +92,7 @@ export async function GET(req: NextRequest) {
             isAttending: false,
             isTeacher: false,
             isPresenting: false,
-            isAdmin: configuration.initialAdmins.includes(userInfo.mail),
+            isAdmin,
         };
     }
 
