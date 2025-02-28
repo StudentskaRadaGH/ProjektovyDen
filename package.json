@@ -33,6 +33,7 @@
 		"date-fns": "^4.1.0",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.38.4",
+		"framer-motion": "^12.4.7",
 		"input-otp": "^1.4.2",
 		"jose": "^5.9.6",
 		"lucide-react": "^0.471.2",
