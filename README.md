@@ -64,6 +64,7 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
     ```
 
 3.  Nastavte konfiguraci v `configuration/configuration.ts`
+    (template v `configuration/configuration.example.ts`)
 
     ```typescript
     {
@@ -98,7 +99,13 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
     }
     ```
 
-4.  Vytvořte .env v hlavním adresáři
+4.  Nastavte ikonu aplikace `configuration/icon.tsx`
+    Můžete využít `configuration/icon.example.tsx` - Pokud používáte svojí, aktualizujte i příslušné soubory:
+
+    - `app/icon.png`
+    - `app/icon-apple.png`
+
+5.  Vytvořte .env v hlavním adresáři
 
     ```dotenv
     BASE_URL="http://localhost:3000"
@@ -118,19 +125,19 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
 > **MICROSOFT_CLIENT_SECRET:** https://portal.azure.com -> Entra ID -> App registrations -> Manage -> Certificates & secrets -> Client secrets -> Value\
 > **MICROSOFT_TENANT_ID:** https://portal.azure.com -> Entra ID -> App registrations -> Overview -> Directory (tenant) ID
 
-5.  Vytvořte strukturu databáze
+6.  Vytvořte strukturu databáze
 
     ```bash
     pnpm migrate
     ```
 
-6.  Zkompilujte aplikaci
+7.  Zkompilujte aplikaci
 
     ```bash
     pnpm build
     ```
 
-7.  Spusťte server
+8.  Spusťte server
 
     ```bash
     pnpm start
