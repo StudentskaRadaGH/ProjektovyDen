@@ -147,7 +147,7 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
 > (Pro trvalý hosting doporučuji pm2)
 >
 > ```bash
-> pm2 start pnpm --name "projektovy-den" -- start
+>  pm2 start npm --name "projektovy-den" -- start -- --port 3000
 > ```
 >
 > ```bash
