@@ -22,6 +22,7 @@ interface AddArchetypeDialogProps {
 const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
+	const [detailedDescription, setDetailedDescription] = useState<string | null>(null);
 
 	const { action, pending } = useServerAction({
 		action: addArchetype,
@@ -32,7 +33,7 @@ const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 	});
 
 	const onSubmit = async () => {
-		const [archetype, error] = inlineCatch(() => addArchetypeSchema.parse({ name, description }));
+		const [archetype, error] = inlineCatch(() => addArchetypeSchema.parse({ name, description, detailedDescription }));
 
 		if (error)
 			return toast.error("Některá pole nejsou správně vyplněna", {
@@ -42,6 +43,7 @@ const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 		await action(archetype);
 		setName("");
 		setDescription("");
+		setDetailedDescription(null);
 	};
 
 	return (
@@ -64,6 +66,15 @@ const AddArchetypeDialog = ({ setOpen }: AddArchetypeDialogProps) => {
 					id="description"
 					value={description}
 					onChange={(e) => setDescription(e.target.value)}
+				/>
+			</div>
+			<div className="flex flex-col space-y-2">
+				<Label htmlFor="detailedDescription">Detailní popis</Label>
+				<AutosizeTextarea
+					id="detailedDescription"
+					placeholder="(Nepovinné)"
+					value={detailedDescription ?? ""}
+					onChange={(e) => setDetailedDescription(e.target.value)}
 				/>
 			</div>
 			<DialogFooter>

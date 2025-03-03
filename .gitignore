@@ -47,3 +47,4 @@ pnpm-lock.yaml
 # configuration
 /configuration/configuration.ts
 /configuration/icon.tsx
+Todo.md
