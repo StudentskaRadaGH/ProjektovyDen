@@ -14,8 +14,9 @@ import {
 import { recalculateAll, recalculateEventAttending } from "./lookup";
 import { session, validateUser } from "@/auth/session";
 
-import { AttendanceClientState } from "@/app/private/admin/utility/_components/editUser";
 import { UserErrorType } from "@/lib/utilityTypes";
+
+// import { AttendanceClientState } from "@/app/private/admin/utility/_components/editUser";
 
 export type AttendanceState = {
     id: number;
@@ -75,30 +76,30 @@ export const getAttendanceStateForUserId = async (
     }));
 };
 
-export const saveUserAttendances = async (
-    userId: number,
-    attendances: AttendanceClientState,
-) => {
-    const user = await session();
+// export const saveUserAttendances = async (
+//     userId: number,
+//     attendances: AttendanceClientState,
+// ) => {
+//     const user = await session();
 
-    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+//     if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
 
-    const target = await db.query.users.findFirst({
-        where: and(eq(users.id, userId), eq(users.isAttending, true)),
-    });
+//     const target = await db.query.users.findFirst({
+//         where: and(eq(users.id, userId), eq(users.isAttending, true)),
+//     });
 
-    if (!target) return UserError("Uživatel není účastníkem");
+//     if (!target) return UserError("Uživatel není účastníkem");
 
-    await db.delete(attendance).where(eq(attendance.user, userId));
+//     await db.delete(attendance).where(eq(attendance.user, userId));
 
-    const inserts = Object.values(attendances)
-        .filter((a) => a !== null)
-        .map((a) => ({
-            user: userId,
-            event: a,
-        }));
+//     const inserts = Object.values(attendances)
+//         .filter((a) => a !== null)
+//         .map((a) => ({
+//             user: userId,
+//             event: a,
+//         }));
 
-    await db.insert(attendance).values(inserts);
+//     await db.insert(attendance).values(inserts);
 
-    await recalculateAll();
-};
+//     await recalculateAll();
+// };
