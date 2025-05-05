@@ -7,14 +7,12 @@ import {
     events,
     interests,
     places,
-    presenters,
     users,
 } from "./models";
 
 import { relations } from "drizzle-orm";
 
 export const userRelations = relations(users, ({ many }) => ({
-    presents: many(presenters),
     interests: many(interests),
     claims: many(claims),
     attendances: many(attendance),
@@ -50,19 +48,7 @@ export const eventRelations = relations(events, ({ many, one }) => ({
         fields: [events.place],
         references: [places.id],
     }),
-    presenters: many(presenters),
     attendances: many(attendance),
-}));
-
-export const presenterRelations = relations(presenters, ({ one }) => ({
-    user: one(users, {
-        fields: [presenters.user],
-        references: [users.id],
-    }),
-    event: one(events, {
-        fields: [presenters.event],
-        references: [events.id],
-    }),
 }));
 
 export const interestRelations = relations(interests, ({ one }) => ({

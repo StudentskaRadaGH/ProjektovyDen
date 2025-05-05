@@ -5,7 +5,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { deleteAttendances, generateAttendances } from "@/actions/utils";
 import {
     recalculateAll,
     recalculateArchetypeInterested,
@@ -25,16 +25,12 @@ import {
 } from "@/actions/lookup";
 
 import { Button } from "@/components/ui/button";
-import { ComboBox } from "@/components/ui/combobox";
-import EditUser from "./editUser";
 import { Fragment } from "react";
-import { Label } from "@/components/ui/label";
+import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { TriangleAlert } from "lucide-react";
-import { User } from "@/lib/types";
 import { configuration } from "@/configuration/configuration";
-import { generateAttendances } from "@/actions/utils";
 import { useServerAction } from "@/hooks/use-server-action";
 
 interface ClientUtilityPageProps {
@@ -44,13 +40,11 @@ interface ClientUtilityPageProps {
         claims: number;
     }[];
     claimsPerUserFrequency: { [key: number]: number };
-    attendees: Pick<User, "id" | "name">[];
 }
 
 const ClientUtilityPage = ({
     claimsPerUser,
     claimsPerUserFrequency,
-    attendees,
 }: ClientUtilityPageProps) => {
     const { action: archetypeInterested, pending: archetypeInterestedPending } =
         useServerAction({
@@ -95,6 +89,16 @@ const ClientUtilityPage = ({
         errorToastTitle: "Při rozřazování účastníků došlo k chybě",
     });
 
+    const {
+        action: deleteAttendancesAction,
+        pending: deleteAttendancesPending,
+    } = useServerAction({
+        action: deleteAttendances,
+        successToast: "Rozřazení účastníků bylo úspěšně zrušeno",
+        loadingToast: "Rušení rozřazení...",
+        errorToastTitle: "Při rušení rozřazení účastníků došlo k chybě",
+    });
+
     return (
         <div className="flex w-full flex-col gap-4">
             <Alert variant="destructive">
@@ -103,9 +107,22 @@ const ClientUtilityPage = ({
                 <AlertDescription>
                     Pokud přesně nerozumíte, co následující možnosti dělají,
                     nejsou určená pro vás, <b>nepoužívejte je</b>. Mohlo by
-                    dojít ke <b>korupci dat.</b>
+                    dojít k <b>poškození dat.</b>
                 </AlertDescription>
             </Alert>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Prezenční listina</CardTitle>
+                    <CardDescription>
+                        Vygeneruje prezenční listiny pro celou akci jako PDF.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-wrap items-center justify-end gap-3">
+                    <Link href={"/api/attendance"} target="_blank">
+                        <Button>Vygenerovat</Button>
+                    </Link>
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Cache</CardTitle>
@@ -209,6 +226,13 @@ const ClientUtilityPage = ({
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-end gap-3">
                     <ServerActionButton
+                        variant="destructive"
+                        pending={deleteAttendancesPending}
+                        onClick={deleteAttendancesAction}
+                    >
+                        Zrušit rozřazení
+                    </ServerActionButton>
+                    <ServerActionButton
                         pending={generateAttendancesPending}
                         onClick={generateAttendancesAction}
                     >
@@ -216,7 +240,6 @@ const ClientUtilityPage = ({
                     </ServerActionButton>
                 </CardContent>
             </Card>
-            <EditUser attendees={attendees} />
         </div>
     );
 };

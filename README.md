@@ -74,6 +74,8 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
         appThemeColor: "#001c2e",
         SRGHBranding: true, // Jedná se o akci SRGH
 
+        attendanceSheetFooter: "Přednáškový den Studentské rady GH, 2025", // Text, který se objeví na prezenční listině na spodní části stránky
+
         initialAdmins: [ // Maily uživatelů, kteří automaticky dostanou přiřazenu roli administrátora
             "kostkaj@gytool.cz"
         ],

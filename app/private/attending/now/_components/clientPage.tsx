@@ -2,12 +2,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MapPin, Presentation } from "lucide-react";
-import { formatDuration, intervalToDuration } from "date-fns";
 import { useEffect, useState } from "react";
 
 import { Attendance } from "@/lib/types";
-import { attendance } from "@/db";
-import { cs } from "date-fns/locale";
+import SRGH from "@/components/icons/SRGH";
+import { configuration } from "@/configuration/configuration";
 import { getBlockName } from "@/validation/block";
 
 interface NowClientPageProps {
@@ -23,8 +22,6 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
     >(null);
 
     const recalculateEvents = () => {
-        console.log("Thinking about events");
-
         let nextEventTemp: (typeof attendances)[number]["event"] | null = null;
 
         attendances.forEach((attendance) => {
@@ -53,7 +50,7 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
             recalculateEvents();
         }, 1000);
         return () => clearInterval(interval);
-    });
+    }, []);
 
     return (
         <div className="flex size-full flex-col items-center justify-center gap-10">
@@ -95,6 +92,26 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
                         <div>
                             <Clock className="mr-3 align-middle" />
                             {getBlockName(nextEvent.block)}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+            {!currentEvent && !nextEvent && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Akce již skončila</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3">
+                        Děkujeme za účast na akci! Doufáme, že jste si ji užili
+                        a přejeme příjemný zbytek dne.
+                        <div className="text-right">
+                            {configuration.SRGHBranding ? (
+                                <>
+                                    - <SRGH /> Studentská rada GH
+                                </>
+                            ) : (
+                                "- Organizátoři akce"
+                            )}
                         </div>
                     </CardContent>
                 </Card>

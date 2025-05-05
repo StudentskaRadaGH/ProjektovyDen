@@ -11,7 +11,6 @@ import { use, useState } from "react";
 
 import BlockElement from "./block";
 import { Button } from "@/components/ui/button";
-import SRGH from "@/components/icons/SRGH";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserContext } from "@/components/context/auth";
@@ -167,8 +166,7 @@ const ClientClaims = () => {
                     <AlertTitle>Volby přednášek jsou uzavřeny</AlertTitle>
                     <AlertDescription className="text-muted-foreground">
                         Pokud máte nějaký problém s vašimi přednáškami,
-                        kontaktujte prosím <SRGH variant="outline" />{" "}
-                        Studentskou radu GH.
+                        kontaktujte prosím organizátora akce.
                     </AlertDescription>
                 </Alert>
             )}

@@ -8,7 +8,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Event, User } from "@/lib/types";
-import { GraduationCap, MapPin, Users } from "lucide-react";
+import { MapPin, Users } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
 import { DialogDescription } from "@radix-ui/react-dialog";
@@ -19,7 +19,6 @@ interface EventDetailsProps {
     event: Omit<Event, "archetype" | "block"> & {
         archetype: number;
         block: number;
-        presenters: { user: Pick<User, "name"> }[];
         attendances: {
             id: number;
             user: Pick<User, "id" | "name" | "colors">;
@@ -37,11 +36,6 @@ const EventDetails = ({ event }: EventDetailsProps) => {
                         {event.place.name}
                     </div>
                     <div className="flex items-center gap-2">
-                        <GraduationCap />
-                        {event.presenters.map((p) => p.user.name).join(", ")}
-                        {event.presenters.length === 0 && "-"}
-                    </div>
-                    <div className="flex items-center gap-2">
                         <Users />
                         {event.attending} / {event.capacity}
                     </div>
@@ -54,13 +48,6 @@ const EventDetails = ({ event }: EventDetailsProps) => {
                             <div className="flex items-center gap-2">
                                 <MapPin />
                                 {event.place.name}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <GraduationCap />
-                                {event.presenters
-                                    .map((p) => p.user.name)
-                                    .join(", ")}
-                                {event.presenters.length === 0 && "-"}
                             </div>
                             <div className="flex items-center gap-2">
                                 <Users />

@@ -68,10 +68,6 @@ const SidebarLinks = () => {
             pages: [] as (PageInfo & { showInSidebar: true })[],
         },
         {
-            title: getRoleName("presenting"),
-            pages: [] as (PageInfo & { showInSidebar: true })[],
-        },
-        {
             title: getRoleName("admin"),
             pages: [] as (PageInfo & { showInSidebar: true })[],
         },
@@ -86,14 +82,11 @@ const SidebarLinks = () => {
             case "attending":
                 categories[1].pages.push(page);
                 break;
-            case "presenting":
+            case "admin":
                 categories[2].pages.push(page);
                 break;
-            case "admin":
-                categories[3].pages.push(page);
-                break;
             case "maintenance":
-                categories[4].pages.push(page);
+                categories[3].pages.push(page);
                 break;
             default:
                 categories[0].pages.push(page);
@@ -103,8 +96,7 @@ const SidebarLinks = () => {
     const showTitles =
         (categories[1].pages.length > 0 ? 1 : 0) +
             (categories[2].pages.length > 0 ? 1 : 0) +
-            (categories[3].pages.length > 0 ? 1 : 0) +
-            (categories[4].pages.length > 0 ? 1 : 0) >
+            (categories[3].pages.length > 0 ? 1 : 0) >
         1;
 
     return (

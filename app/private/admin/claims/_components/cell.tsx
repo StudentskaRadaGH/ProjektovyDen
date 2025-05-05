@@ -13,6 +13,7 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import { Separator } from "@/components/ui/separator";
 import UserRow from "./userRow";
 import { Users } from "lucide-react";
+import { configuration } from "@/configuration/configuration";
 
 interface CellProps {
     lookup: {
@@ -62,20 +63,23 @@ const Cell = ({ lookup, claims }: CellProps) => {
                     <DialogDescription />
                 </DialogHeader>
                 <Separator />
-                <b>Jako primární</b>
+                {configuration.secondaryClaims && <b>Jako primární</b>}
                 {claims
                     .filter((c) => !c.secondary)
                     .map((claim) => (
                         <UserRow key={claim.id} claim={claim} />
                     ))}
-                <Separator />
-                <b>Jako sekundární</b>
-                {claims
-                    .filter((c) => c.secondary)
-                    .map((claim) => (
-                        <UserRow key={claim.id} claim={claim} />
-                    ))}
-                {/* <DialogFooter></DialogFooter> */}
+                {configuration.secondaryClaims && (
+                    <>
+                        <Separator />
+                        <b>Jako sekundární</b>
+                        {claims
+                            .filter((c) => c.secondary)
+                            .map((claim) => (
+                                <UserRow key={claim.id} claim={claim} />
+                            ))}
+                    </>
+                )}
             </DialogContent>
         </Dialog>
     );

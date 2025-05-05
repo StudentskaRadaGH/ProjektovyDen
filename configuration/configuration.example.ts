@@ -7,6 +7,8 @@ export const configuration: AppConfiguration = {
     appThemeColor: "#001c2e",
     SRGHBranding: true,
 
+    attendanceSheetFooter: "Přednáškový den Studentské rady GH, 2025",
+
     initialAdmins: ["kostkaj@gytool.cz"],
 
     collectInterest: true,

@@ -20,7 +20,7 @@ import { revalidatePath } from "next/cache";
 export const accountSetup = async (unsafe: accountSetupSchema) => {
     const user = await session();
 
-    if (user.isAttending || user.isTeacher || user.isPresenting || user.isAdmin)
+    if (user.isAttending || user.isTeacher || user.isAdmin)
         return UserError("Neplatný stav uživatele");
 
     const [data, error] = inlineCatch(() => accountSetupSchema.parse(unsafe));

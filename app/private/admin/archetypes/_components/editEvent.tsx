@@ -1,6 +1,5 @@
 "use client";
 
-import { Block, User } from "@/lib/types";
 import {
     Card,
     CardContent,
@@ -15,14 +14,7 @@ import {
     deleteEvent,
     editEvent,
 } from "@/actions/events";
-import {
-    GraduationCap,
-    MapPin,
-    Pencil,
-    Save,
-    Trash2,
-    Users,
-} from "lucide-react";
+import { MapPin, Pencil, Save, Trash2, Users } from "lucide-react";
 import { catchUserError, inlineCatch } from "@/lib/utils";
 import { createNewEventSchema, editEventSchema } from "@/validation/events";
 import {
@@ -31,10 +23,10 @@ import {
 } from "@/hooks/use-server-action";
 import { useEffect, useState } from "react";
 
+import { Block } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { ComboBox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
-import { MultiSelect } from "@/components/ui/multiSelect";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ZodError } from "zod";
@@ -62,7 +54,6 @@ const EditEvent = ({
     const [block, setBlock] = useState<number | null>(event?.block.id ?? null);
     const [place, setPlace] = useState<number | null>();
     const [capacity, setCapacity] = useState(event?.capacity ?? 0);
-    const [presenters, setPresenters] = useState<User["id"][]>();
 
     const { action: createNew, pending: createNewPending } = useServerAction({
         action: createNewEvent,
@@ -102,7 +93,6 @@ const EditEvent = ({
                 block,
                 place,
                 capacity,
-                presenters,
             };
 
             const [safe, error] = inlineCatch(() =>
@@ -124,7 +114,6 @@ const EditEvent = ({
                 block,
                 place,
                 capacity,
-                presenters,
             };
 
             const [safe, error] = inlineCatch(() =>
@@ -147,7 +136,6 @@ const EditEvent = ({
         setBlock(event?.block.id ?? null);
         setPlace(event?.place.id ?? null);
         setCapacity(event?.capacity ?? 0);
-        setPresenters(event?.presenters.map((p) => p.user.id) ?? []);
     };
 
     const {
@@ -179,32 +167,12 @@ const EditEvent = ({
         initialArgs: [null],
     });
 
-    const {
-        data: possiblePresenters,
-        refresh: refreshPossiblePresenters,
-        returningInitial: possiblePresentersUpdating,
-    } = fetchWithServerAction({
-        action: async (
-            blockId: number | null,
-        ): Promise<Pick<User, "id" | "name">[]> => {
-            return [];
-        },
-        initial: [],
-        initialArgs: [null],
-    });
-
     useEffect(() => {
         if (!block) return;
 
         setPlace(place === undefined ? (event?.place.id ?? null) : null);
-        setPresenters(
-            presenters === undefined
-                ? (event?.presenters.map((p) => p.user.id) ?? [])
-                : [],
-        );
 
         refreshPossiblePlaces(block);
-        refreshPossiblePresenters(block);
     }, [block]);
 
     return (
@@ -257,31 +225,6 @@ const EditEvent = ({
                                             <div className="text-center text-sm text-muted-foreground">
                                                 V daném bloku již není volné
                                                 žádné místo
-                                            </div>
-                                        )
-                                    ) : (
-                                        <Skeleton className="h-10 rounded" />
-                                    )}
-                                </label>
-                                <label className="flex flex-col gap-2">
-                                    <b>Přednášející:</b>
-                                    {!possiblePresentersUpdating ? (
-                                        possiblePresenters.length > 0 ? (
-                                            <MultiSelect
-                                                className="w-auto"
-                                                value={presenters ?? []}
-                                                onChange={setPresenters}
-                                                values={possiblePresenters.map(
-                                                    (presenter) => ({
-                                                        value: presenter.id,
-                                                        label: presenter.name,
-                                                    }),
-                                                )}
-                                            />
-                                        ) : (
-                                            <div className="text-center text-sm text-muted-foreground">
-                                                V daném bloku již není volný
-                                                žádný přednášející
                                             </div>
                                         )
                                     ) : (
@@ -343,13 +286,6 @@ const EditEvent = ({
                             </div>
                             <div>
                                 <MapPin /> Místo: {event.place.name}
-                            </div>
-                            <div>
-                                <GraduationCap /> Přednášející:{" "}
-                                {event.presenters
-                                    .map((p) => p.user.name)
-                                    .join(", ")}
-                                {event.presenters.length === 0 && "-"}
                             </div>
                         </CardDescription>
                     </CardHeader>

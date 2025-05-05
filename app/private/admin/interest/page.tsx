@@ -1,12 +1,4 @@
-import {
-    archetypes as archetypesTable,
-    asc,
-    count,
-    db,
-    desc,
-    eq,
-    interests,
-} from "@/db";
+import { archetypes as archetypesTable, asc, db, desc } from "@/db";
 
 import { Card } from "@/components/ui/card";
 import { Fragment } from "react";
