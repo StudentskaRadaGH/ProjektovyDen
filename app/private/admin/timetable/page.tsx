@@ -13,14 +13,6 @@ const TimetablePage: NextPage = async () => {
             events: {
                 with: {
                     place: true,
-                    presenters: {
-                        columns: {},
-                        with: {
-                            user: {
-                                columns: { name: true },
-                            },
-                        },
-                    },
                     attendances: {
                         columns: {
                             id: true,

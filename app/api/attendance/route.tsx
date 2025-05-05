@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { UnauthorizedError, createMapById } from "@/lib/utils";
 import { session, validateUser } from "@/auth/session";
 
+import { configuration } from "@/configuration/configuration";
 import { getBlockName } from "@/validation/block";
 
 export async function GET(req: NextRequest) {
@@ -53,12 +54,12 @@ export async function GET(req: NextRequest) {
 
     Font.register({
         family: "Roboto",
-        src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf",
+        src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
     });
 
     Font.register({
         family: "RobotoBold",
-        src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-semibold-webfont.ttf",
+        src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-bold-webfont.ttf",
     });
 
     const styles = StyleSheet.create({
@@ -135,14 +136,15 @@ export async function GET(req: NextRequest) {
     });
 
     const stream = await renderToStream(
-        <Document author="Studentská rada GH" title="Seznam účastníků">
+        <Document
+            author="Software pro správu Projektových dnů"
+            title="Prezenční listina"
+        >
             {events.map((event) => (
-                <Page size="A4" style={styles.page}>
+                <Page size="A4" style={styles.page} key={event.id}>
                     <View style={styles.header} fixed>
                         <PDFImage
-                            src={
-                                "https://prednaskovy-den.krychlic.com/icons/icon-512.png"
-                            }
+                            src={"./app/icon.png"}
                             style={styles.headerImage}
                         />
                         <View style={styles.headerText}>
@@ -150,8 +152,8 @@ export async function GET(req: NextRequest) {
                                 {archetypes
                                     .get(event.archetype)!
                                     .name.split(" ")
-                                    .map((t) => (
-                                        <Text>{t}</Text>
+                                    .map((t, i) => (
+                                        <Text key={i}>{t}</Text>
                                     ))}
                             </View>
                             <View style={styles.headerInfo}>
@@ -185,8 +187,8 @@ export async function GET(req: NextRequest) {
                                     </View>
                                 </>
                             ))}
-                        {[0, 1].map(() => (
-                            <View style={styles.row}>
+                        {[0, 1].map((i) => (
+                            <View style={styles.row} key={i}>
                                 <Text
                                     style={{
                                         ...styles.signatureSpace,
@@ -210,19 +212,19 @@ export async function GET(req: NextRequest) {
                             gap: 20,
                         }}
                     >
-                        <Text>Doprovod:</Text>{" "}
+                        <Text>Doprovod:</Text>
                         <View
                             style={{ ...styles.signatureSpace, width: "100%" }}
                         ></View>
                     </View>
                     <View style={styles.footer} fixed>
                         <Text style={{ flexBasis: "80%" }}>
-                            ID dokumentu: {event.id}_{Date.now()}
+                            ID: {user.id}-{event.id}-{Date.now()}
                         </Text>
                         <Text
                             style={{ flexBasis: "100%", textAlign: "center" }}
                         >
-                            Přednáškový den Studentské rady GH, 2025
+                            {configuration.attendanceSheetFooter}
                         </Text>
                         <Text
                             style={{ flexBasis: "80%", textAlign: "right" }}

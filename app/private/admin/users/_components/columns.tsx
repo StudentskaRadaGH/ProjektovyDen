@@ -25,7 +25,6 @@ interface ColumnsProps {
     filter: {
         attending: boolean | null;
         teacher: boolean | null;
-        presenting: boolean | null;
         admin: boolean | null;
         query: string;
     };
@@ -88,7 +87,6 @@ export const getColumns: (options: ColumnsProps) => ColumnDef<User>[] = ({
                         [
                             "attending",
                             "teacher",
-                            "presenting",
                             "admin",
                         ] as (keyof typeof roleNames)[]
                     ).map((role) => (
@@ -127,7 +125,6 @@ export const getColumns: (options: ColumnsProps) => ColumnDef<User>[] = ({
             const roles: (keyof typeof roleNames)[] = [];
             if (row.original.isAttending) roles.push("attending");
             if (row.original.isTeacher) roles.push("teacher");
-            if (row.original.isPresenting) roles.push("presenting");
             if (row.original.isAdmin) roles.push("admin");
 
             return roles.map((role) => getRoleIcon(role));

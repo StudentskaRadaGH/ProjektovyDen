@@ -11,7 +11,6 @@ import {
     events,
     inArray,
     places,
-    presenters as presentersTable,
     sql,
     users,
 } from "@/db";
@@ -22,11 +21,7 @@ import { UserErrorType } from "@/lib/utilityTypes";
 import { recalculateBlockArchetypeLookup } from "./lookup";
 import { revalidatePath } from "next/cache";
 
-export type EditEventDetails = Omit<Event, "archetype"> & {
-    presenters: {
-        user: Pick<User, "id" | "name">;
-    }[];
-};
+export type EditEventDetails = Omit<Event, "archetype">;
 
 export const createNewEvent = async (unsafe: createNewEventSchema) => {
     const user = await session();
@@ -68,34 +63,6 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
     if (!place || place.events.length > 0)
         return UserError("Neplatné ID místa");
 
-    // Presenters
-    const presenters = (
-        await db.query.users.findMany({
-            columns: { id: true },
-            where: and(
-                inArray(users.id, data.presenters),
-                eq(users.isPresenting, true),
-            ),
-            with: {
-                presents: {
-                    columns: {},
-                    with: {
-                        event: {
-                            columns: {
-                                block: true,
-                            },
-                        },
-                    },
-                },
-            },
-        })
-    ).filter((presenter) =>
-        presenter.presents.every((p) => p.event.block !== data.block),
-    );
-
-    if (presenters.length !== data.presenters.length)
-        return UserError("Neplatné ID prezentujícího");
-
     const inserted_id = (
         await db
             .insert(events)
@@ -109,14 +76,6 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
     )[0].insertedId;
 
     if (!inserted_id) return UserError("Nepodařilo se vytvořit přednášku");
-
-    if (data.presenters.length > 0)
-        await db.insert(presentersTable).values(
-            data.presenters.map((presenter) => ({
-                event: inserted_id,
-                user: presenter,
-            })),
-        );
 
     await db
         .update(blockArchetypeLookup)
@@ -146,13 +105,6 @@ export const editEvent = async (unsafe: editEventSchema) => {
     // Event
     const event = await db.query.events.findFirst({
         where: eq(events.id, data.id),
-        with: {
-            presenters: {
-                columns: {
-                    user: true,
-                },
-            },
-        },
     });
 
     if (!event) return UserError("Neplatné ID přednášky");
@@ -185,46 +137,6 @@ export const editEvent = async (unsafe: editEventSchema) => {
             return UserError("Neplatné ID místa");
     }
 
-    // Presenters
-    const presenters = (
-        await db.query.users.findMany({
-            columns: { id: true },
-            where: and(
-                inArray(users.id, data.presenters),
-                eq(users.isPresenting, true),
-            ),
-            with: {
-                presents: {
-                    columns: {},
-                    with: {
-                        event: {
-                            columns: {
-                                id: true,
-                                block: true,
-                            },
-                        },
-                    },
-                },
-            },
-        })
-    ).filter((presenter) =>
-        presenter.presents.every(
-            (p) => p.event.block !== data.block && p.event.id === data.id,
-        ),
-    );
-
-    if (presenters.length !== data.presenters.length)
-        return UserError("Neplatné ID prezentujícího");
-
-    await db.delete(presentersTable).where(eq(presentersTable.event, data.id));
-    if (data.presenters.length > 0)
-        await db.insert(presentersTable).values(
-            data.presenters.map((presenter) => ({
-                event: data.id,
-                user: presenter,
-            })),
-        );
-
     await db
         .update(events)
         .set({
@@ -255,8 +167,6 @@ export const deleteEvent = async (eventId: number) => {
         return UserError(
             "Nelze smazat přednášku, na kterou je již někdo nahlášen",
         );
-
-    await db.delete(presentersTable).where(eq(presentersTable.event, eventId));
 
     await db.delete(events).where(eq(events.id, eventId));
 
@@ -293,17 +203,6 @@ export const getArchetypeEvents = async (
         with: {
             block: true,
             place: true,
-            presenters: {
-                columns: {},
-                with: {
-                    user: {
-                        columns: {
-                            id: true,
-                            name: true,
-                        },
-                    },
-                },
-            },
         },
     });
 };

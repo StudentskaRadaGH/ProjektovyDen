@@ -40,12 +40,11 @@ export type PageInfo = {
 export const getPages = ({
     isAttending,
     isTeacher,
-    isPresenting,
     isAdmin,
 }: UserPermissions): PageInfo[] => {
     const pages: PageInfo[] = [];
 
-    if (!isAttending && !isTeacher && !isPresenting && !isAdmin)
+    if (!isAttending && !isTeacher && !isAdmin)
         pages.push({
             path: "/",
             file: "/invalid-account",

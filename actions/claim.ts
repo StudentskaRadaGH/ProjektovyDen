@@ -352,7 +352,7 @@ export const adminSaveClaims = async (unsafe: adminSaveClaimsSchema) => {
     if (error) return UserError(error);
 
     const targetUser = await db.query.users.findFirst({
-        where: and(eq(users.id, data.user), eq(users.isAttending, true)),
+        where: eq(users.id, data.user),
     });
     if (!targetUser) return UserError("Uživatel neexistuje");
 

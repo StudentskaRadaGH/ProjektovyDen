@@ -119,3 +119,13 @@ export const generateAttendances = async () => {
 
     await recalculateAll();
 };
+
+export const deleteAttendances = async () => {
+    const user = await session();
+
+    if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
+
+    await db.delete(attendance);
+
+    await recalculateAll();
+};

@@ -16,7 +16,6 @@ export const editUserSchema = z.object({
     }),
     isAttending: z.boolean(),
     isTeacher: z.boolean(),
-    isPresenting: z.boolean(),
     isAdmin: z.boolean(),
 });
 

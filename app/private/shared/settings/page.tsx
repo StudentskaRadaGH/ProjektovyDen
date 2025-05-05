@@ -32,8 +32,6 @@ const SettingsPage: NextPage = async () => {
                         <b>Mail:</b> <span>{user.email}</span>
                         <b>Účastník akce:</b>
                         {user.isAttending ? <Yes withText /> : <No withText />}
-                        <b>Prezentující:</b>
-                        {user.isPresenting ? <Yes withText /> : <No withText />}
                     </CardContent>
                 </Card>
                 {user.isAttending && <ClassSelector />}

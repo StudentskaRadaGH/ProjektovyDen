@@ -42,13 +42,11 @@ export function UsersTable({ data }: DataTableProps<User>) {
     const [filter, setFilter] = useState<{
         attending: boolean | null;
         teacher: boolean | null;
-        presenting: boolean | null;
         admin: boolean | null;
         query: string;
     }>({
         attending: null,
         teacher: null,
-        presenting: null,
         admin: null,
         query: "",
     });
@@ -68,7 +66,6 @@ export function UsersTable({ data }: DataTableProps<User>) {
         table.setGlobalFilter({
             attending: null,
             teacher: null,
-            presenting: null,
             admin: null,
             query: filter.query,
         });
@@ -79,7 +76,6 @@ export function UsersTable({ data }: DataTableProps<User>) {
     const roleFilterActive =
         filter.attending !== null ||
         filter.teacher !== null ||
-        filter.presenting !== null ||
         filter.admin !== null;
 
     const filterFn: FilterFn<User> = (
@@ -96,11 +92,6 @@ export function UsersTable({ data }: DataTableProps<User>) {
         if (
             filter.teacher !== null &&
             row.original.isTeacher !== filter.teacher
-        )
-            return false;
-        if (
-            filter.presenting !== null &&
-            row.original.isPresenting !== filter.presenting
         )
             return false;
         if (filter.admin !== null && row.original.isAdmin !== filter.admin)

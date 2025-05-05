@@ -14,7 +14,6 @@ export const createNewEventSchema = z.object({
     capacity: z.number().min(1, {
         message: "Kapacita přednášky musí být větší než 0",
     }),
-    presenters: z.array(z.number()),
 });
 
 export type createNewEventSchema = z.infer<typeof createNewEventSchema>;
@@ -30,7 +29,6 @@ export const editEventSchema = z
         capacity: z.number().min(1, {
             message: "Kapacita přednášky musí být větší než 0",
         }),
-        presenters: z.array(z.number()),
     })
     .merge(withId);
 
