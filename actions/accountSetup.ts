@@ -71,7 +71,7 @@ export const setWillAttend = async (willAttend: boolean) => {
                 db
                     .update(blockArchetypeLookup)
                     .set({
-                        capacity: sql`${blockArchetypeLookup.capacity} + ${1}`,
+                        freeSpace: sql`${blockArchetypeLookup.freeSpace} + ${1}`,
                     })
                     .where(
                         and(

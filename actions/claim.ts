@@ -2,7 +2,9 @@
 
 import { Archetype, Block, Claim, User } from "@/lib/types";
 import {
+    attendance as Attendance,
     claims as Claims,
+    events as Events,
     and,
     asc,
     blockArchetypeLookup,
@@ -15,7 +17,6 @@ import {
 import {
     UnauthorizedError,
     UserError,
-    asyncInlineCatch,
     catchUserError,
     inlineCatch,
 } from "@/lib/utils";
@@ -44,6 +45,14 @@ export type BlocksState = {
         spaceTotal: number;
     }[];
 }[];
+
+export type BlockStateWithAttendance = (BlocksState[number] & {
+    eventId: number | null;
+    events: {
+        id: number;
+        name: string;
+    }[];
+})[];
 
 const getBlockStateForUserId = async (
     userId: User["id"],
@@ -101,7 +110,7 @@ export const getBlocksState = async (): Promise<
 
 export const getUserBlockState = async (
     userId: number,
-): Promise<UserErrorType | BlocksState> => {
+): Promise<UserErrorType | BlockStateWithAttendance> => {
     const user = await session();
 
     if (!validateUser(user, { isAdmin: true })) return UnauthorizedError();
@@ -112,7 +121,37 @@ export const getUserBlockState = async (
 
     if (!exists) return UserError("Uživatel neexistuje");
 
-    return await getBlockStateForUserId(userId);
+    const events = await db.query.events.findMany({
+        with: {
+            archetype: true,
+            place: true,
+        },
+    });
+
+    const attendance = await db.query.attendance.findMany({
+        where: eq(Attendance.user, userId),
+        with: {
+            event: {
+                columns: {
+                    id: true,
+                    block: true,
+                },
+            },
+        },
+    });
+
+    return (await getBlockStateForUserId(userId)).map((block) => ({
+        ...block,
+        eventId:
+            attendance.filter((a) => a.event.block === block.id)[0]?.event.id ??
+            null,
+        events: events
+            .filter((e) => e.block === block.id)
+            .map((e) => ({
+                id: e.id,
+                name: e.archetype.name + " - " + e.place.name,
+            })),
+    }));
 };
 
 const saveUserClaims = async (
@@ -363,6 +402,68 @@ export const adminSaveClaims = async (unsafe: adminSaveClaimsSchema) => {
     if (saveError) return saveError;
 
     if (!succeeded) return UserError("Volby přednášek se nepodařilo uložit");
+
+    const userAttendance = await db.query.attendance.findMany({
+        where: eq(Attendance.user, targetUser.id),
+        with: {
+            event: {
+                columns: {
+                    id: true,
+                    block: true,
+                },
+            },
+        },
+    });
+
+    for await (const event of data.events) {
+        const current = userAttendance.find(
+            (a) => a.event.block === event.block,
+        );
+
+        if (current && event.event === null) {
+            await db.delete(Attendance).where(eq(Attendance.id, current.id));
+            await db
+                .update(Events)
+                .set({
+                    attending: sql`${Events.attending} - 1`,
+                })
+                .where(eq(Events.id, current.event.id));
+        } else if (!current && event.event !== null) {
+            await db.insert(Attendance).values({
+                user: targetUser.id,
+                event: event.event,
+            });
+            await db
+                .update(Events)
+                .set({
+                    attending: sql`${Events.attending} + 1`,
+                })
+                .where(eq(Events.id, event.event));
+        } else if (
+            current &&
+            event.event !== current.event.id &&
+            event.event !== null
+        ) {
+            await db
+                .update(Attendance)
+                .set({
+                    event: event.event,
+                })
+                .where(eq(Attendance.id, current.id));
+            await db
+                .update(Events)
+                .set({
+                    attending: sql`${Events.attending} - 1`,
+                })
+                .where(eq(Events.id, current.event.id));
+            await db
+                .update(Events)
+                .set({
+                    attending: sql`${Events.attending} + 1`,
+                })
+                .where(eq(Events.id, event.event));
+        }
+    }
 };
 
 export const removeClaim = async (claimId: Claim["id"]) => {
