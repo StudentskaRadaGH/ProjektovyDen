@@ -84,9 +84,9 @@ export const deleteBlock = async (id: number) => {
 
 	if (exists.events.length > 0) return UserError("Blok nelze smazat, protože se během něj konají akce");
 
-	await db.delete(blocks).where(eq(blocks.id, id));
-
 	await db.delete(blockArchetypeLookup).where(eq(blockArchetypeLookup.block, id));
+
+	await db.delete(blocks).where(eq(blocks.id, id));
 
 	revalidatePath("/admin/blocks");
 };
