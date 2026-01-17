@@ -116,6 +116,7 @@ const ClientClaims = () => {
         newClaims: BlockClaims[number],
     ) => {
         if (
+            !configuration.allowMultipleClaimsOfSameArchetype &&
             blockState.some((b) => {
                 if (b.id === blockId) return false;
 

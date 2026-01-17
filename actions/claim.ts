@@ -301,6 +301,7 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
     for (const row of data) {
         if (configuration.secondaryClaims) {
             if (
+                !configuration.allowMultipleClaimsOfSameArchetype &&
                 data.some(
                     (r) =>
                         r.block !== row.block &&
@@ -318,6 +319,7 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
                 );
         } else {
             if (
+                !configuration.allowMultipleClaimsOfSameArchetype &&
                 data.some(
                     (r) =>
                         r.block !== row.block &&

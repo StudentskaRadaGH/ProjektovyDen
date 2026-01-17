@@ -89,7 +89,9 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
 
         openClaimsOn: new Date("2025-01-27T17:00:00Z"), // UTC datum a čas začátku přihlašování do dílen
         closeClaimsOn: new Date("2025-01-28T09:00:00Z"), // UTC datum a čas konce přihlašování do dílen
+
         secondaryClaims: true, // Kromě primárních přednášek i sekundární přednášky
+        allowMultipleClaimsOfSameArchetype: false, // Povolit přihlášení stejné přednášky ve více blocích
 
         validClasses: [
             "I.A4",
