@@ -1,4 +1,4 @@
-import { attendance as Attendance, db, eq } from "@/db";
+import { attendance as Attendance, blocks as Blocks, asc, db, eq } from "@/db";
 
 import { NextPage } from "next";
 import NowClientPage from "./_components/clientPage";
@@ -21,9 +21,19 @@ const NowAttendingPage: NextPage = async () => {
         },
     });
 
+    const startsFrom =
+        (
+            await db.query.blocks.findFirst({
+                orderBy: asc(Blocks.from),
+                columns: {
+                    from: true,
+                },
+            })
+        )?.from ?? null;
+
     return (
         <PageTemplate>
-            <NowClientPage attendances={attendances} />
+            <NowClientPage attendances={attendances} startsFrom={startsFrom} />
         </PageTemplate>
     );
 };

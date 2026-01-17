@@ -1,25 +1,27 @@
 "use client";
 
+import { Attendance, Block } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, MapPin, Presentation } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { Attendance } from "@/lib/types";
 import SRGH from "@/components/icons/SRGH";
 import { configuration } from "@/configuration/configuration";
 import { getBlockName } from "@/validation/block";
 
 interface NowClientPageProps {
     attendances: (Omit<Attendance, "user"> & { user: number })[];
+    startsFrom: Block["from"] | null;
 }
 
-const NowClientPage = ({ attendances }: NowClientPageProps) => {
+const NowClientPage = ({ attendances, startsFrom }: NowClientPageProps) => {
     const [currentEvent, setCurrentEvent] = useState<
         (typeof attendances)[number]["event"] | null
     >(null);
     const [nextEvent, setNextEvent] = useState<
         (typeof attendances)[number]["event"] | null
     >(null);
+    const [hasStarted, setHasStarted] = useState(false);
 
     const recalculateEvents = () => {
         let nextEventTemp: (typeof attendances)[number]["event"] | null = null;
@@ -40,6 +42,10 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
         });
 
         if (nextEventTemp) setNextEvent(nextEventTemp);
+
+        setHasStarted(
+            startsFrom !== null && startsFrom.getTime() <= Date.now(),
+        );
     };
 
     useEffect(() => {
@@ -96,26 +102,38 @@ const NowClientPage = ({ attendances }: NowClientPageProps) => {
                     </CardContent>
                 </Card>
             )}
-            {!currentEvent && !nextEvent && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Akce již skončila</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-3">
-                        Děkujeme za účast na akci! Doufáme, že jste si ji užili
-                        a přejeme příjemný zbytek dne.
-                        <div className="text-right">
-                            {configuration.SRGHBranding ? (
-                                <>
-                                    - <SRGH /> Studentská rada GH
-                                </>
-                            ) : (
-                                "- Organizátoři akce"
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+            {!currentEvent &&
+                !nextEvent &&
+                (hasStarted ? (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Akce již skončila</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-3">
+                            Děkujeme za účast na akci! Doufáme, že jste si ji
+                            užili a přejeme příjemný zbytek dne.
+                            <div className="text-right">
+                                {configuration.SRGHBranding ? (
+                                    <>
+                                        - <SRGH /> Studentská rada GH
+                                    </>
+                                ) : (
+                                    "- Organizátoři akce"
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Akce ještě nezačala</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col gap-3">
+                            Během akce zde uvidíte svůj harmonogram a další
+                            informace.
+                        </CardContent>
+                    </Card>
+                ))}
         </div>
     );
 };

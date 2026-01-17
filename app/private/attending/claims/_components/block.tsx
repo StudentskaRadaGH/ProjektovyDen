@@ -7,16 +7,27 @@ import { Block } from "@/lib/types";
 import { BlockClaims } from "./clientPage";
 import { BlocksState } from "@/actions/claim";
 import { ComboBox } from "@/components/ui/combobox";
+import { Either } from "@/lib/utilityTypes";
 import { configuration } from "@/configuration/configuration";
 import { getBlockName } from "@/validation/block";
 
-interface BlockElementProps {
+type BlockElementProps = {
     block: BlocksState[Block["id"]];
     claims: BlockClaims[Block["id"]];
     onClaimsChange: (claims: BlockClaims[Block["id"]]) => void;
     disabled?: boolean;
-    admin?: boolean;
-}
+} & Either<
+    {},
+    {
+        admin: true;
+        eventId: number | null;
+        events: {
+            id: number;
+            name: string;
+        }[];
+        onEventChane: (eventId: number | null) => void;
+    }
+>;
 
 const BlockElement = ({
     block,
@@ -24,6 +35,9 @@ const BlockElement = ({
     onClaimsChange,
     disabled,
     admin,
+    eventId,
+    events,
+    onEventChane,
 }: BlockElementProps) => {
     return (
         <Card key={block.id}>
@@ -116,6 +130,29 @@ const BlockElement = ({
                                         value: a.id.toString(),
                                         label: a.name,
                                     })),
+                            ]}
+                        />
+                    </>
+                )}
+                {admin && (
+                    <>
+                        <b className="-mb-3">Rozřazení</b>
+                        <ComboBox
+                            placeholder={"Žádné"}
+                            className="w-auto"
+                            value={eventId?.toString() ?? "none"}
+                            onChange={(value) =>
+                                onEventChane(parseIntOrNull(value))
+                            }
+                            values={[
+                                {
+                                    value: "none",
+                                    label: "Žádné",
+                                },
+                                ...(events ?? []).map((e) => ({
+                                    value: e.id.toString(),
+                                    label: e.name,
+                                })),
                             ]}
                         />
                     </>

@@ -34,6 +34,16 @@ export const adminSaveClaimsSchema = z.object({
                 .nullable(),
         }),
     ),
+    events: z.array(
+        z.object({
+            block: z.number({
+                message: "ID bloku musí být číslo.",
+            }),
+            event: z
+                .number({ message: "ID přednášky musí být číslo." })
+                .nullable(),
+        }),
+    ),
 });
 
 export type adminSaveClaimsSchema = z.infer<typeof adminSaveClaimsSchema>;

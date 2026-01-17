@@ -61,7 +61,10 @@ export const setWillAttend = async (willAttend: boolean) => {
 
     if (validateUser(user, { isAttending: true })) {
         const claims = await db.query.claims.findMany({
-            where: eq(claimsTable.user, user.id),
+            where: and(
+                eq(claimsTable.user, user.id),
+                eq(claimsTable.secondary, false),
+            ),
         });
 
         await db.delete(claimsTable).where(eq(claimsTable.user, user.id));
@@ -71,7 +74,7 @@ export const setWillAttend = async (willAttend: boolean) => {
                 db
                     .update(blockArchetypeLookup)
                     .set({
-                        capacity: sql`${blockArchetypeLookup.capacity} + ${1}`,
+                        freeSpace: sql`${blockArchetypeLookup.freeSpace} + ${1}`,
                     })
                     .where(
                         and(

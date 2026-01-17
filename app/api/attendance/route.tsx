@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
                     user: {
                         columns: {
                             name: true,
+                            class: true,
                         },
                     },
                 },
@@ -122,14 +123,15 @@ export async function GET(req: NextRequest) {
         row: {
             display: "flex",
             flexDirection: "row",
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
             alignItems: "center",
-            gap: 5,
-            width: "49%",
+            gap: 20,
+            width: "100%",
         },
         signatureSpace: {
-            width: 150,
-            height: 20,
+            width: "100%",
+            height: 16,
+            marginBottom: 4,
             borderBottom: "1px dotted black",
             flexShrink: 1,
         },
@@ -173,13 +175,14 @@ export async function GET(req: NextRequest) {
                     </View>
                     <View style={styles.table}>
                         {event.attendances
-                            .map((a) => a.user.name)
-                            .sort()
-                            .map((name) => (
+                            .sort((a, b) =>
+                                a.user.name.localeCompare(b.user.name),
+                            )
+                            .map(({ user: { name, class: userClass } }) => (
                                 <>
                                     <View style={styles.row}>
                                         <Text style={{ flexShrink: 0 }}>
-                                            {name}
+                                            {name} ({userClass})
                                         </Text>
                                         <View
                                             style={styles.signatureSpace}
@@ -187,14 +190,8 @@ export async function GET(req: NextRequest) {
                                     </View>
                                 </>
                             ))}
-                        {[0, 1].map((i) => (
+                        {[0, 1, 2, 3].map((i) => (
                             <View style={styles.row} key={i}>
-                                <Text
-                                    style={{
-                                        ...styles.signatureSpace,
-                                        borderColor: "#aaaaaa",
-                                    }}
-                                ></Text>
                                 <View
                                     style={{
                                         ...styles.signatureSpace,

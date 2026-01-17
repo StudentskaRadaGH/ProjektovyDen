@@ -1,6 +1,8 @@
 "use client";
 
+import { Block, Event, User } from "@/lib/types";
 import {
+    BlockStateWithAttendance,
     BlocksState,
     adminSaveClaims,
     getUserBlockState,
@@ -23,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { SetState } from "@/lib/utilityTypes";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User } from "@/lib/types";
 import { catchUserError } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -32,11 +33,16 @@ interface EditClaimsAndAttendanceProps {
     onSwitchEditScreen: SetState<"info" | "claimsAndAttendance">;
 }
 
+interface BlockEvents {
+    [key: Block["id"]]: Event["id"] | null;
+}
+
 const EditClaimsAndAttendance = ({
     user,
     onSwitchEditScreen,
 }: EditClaimsAndAttendanceProps) => {
     const [claims, setClaims] = useState<BlockClaims>({});
+    const [events, setEvents] = useState<BlockEvents>({});
 
     const { action: saveClaimsAction, pending: editClaimsPending } =
         useServerAction({
@@ -74,17 +80,20 @@ const EditClaimsAndAttendance = ({
         loadUserBlockState(user.id);
     }, [user.id]);
 
-    const resetClaims = (data: BlocksState) => {
+    const resetClaims = (data: BlockStateWithAttendance) => {
         const blockClaims: BlockClaims = {};
+        const blockEvents: BlockEvents = {};
 
         data.forEach((d) => {
             blockClaims[d.id] = {
                 primary: d.primaryClaim,
                 secondary: d.secondaryClaim,
             };
+            blockEvents[d.id] = d.eventId;
         });
 
         setClaims(blockClaims);
+        setEvents(blockEvents);
     };
 
     const saveClaims = () => {
@@ -93,6 +102,10 @@ const EditClaimsAndAttendance = ({
                 block: b.id,
                 primaryArchetype: claims[b.id].primary ?? null,
                 secondaryArchetype: claims[b.id].secondary ?? null,
+            })),
+            events: blockState.map((b) => ({
+                block: b.id,
+                event: events[b.id],
             })),
             user: user.id,
         });
@@ -122,6 +135,14 @@ const EditClaimsAndAttendance = ({
                                 }))
                             }
                             admin
+                            events={block.events}
+                            eventId={events[block.id]}
+                            onEventChane={(eventId) =>
+                                setEvents((oldEvents) => ({
+                                    ...oldEvents,
+                                    [block.id]: eventId,
+                                }))
+                            }
                         />
                     ))}
                 </>
