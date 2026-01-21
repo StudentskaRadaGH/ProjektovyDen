@@ -14,6 +14,7 @@ export type AppConfiguration = Readonly<{
 	closeClaimsOn: Date;
 	secondaryClaims: boolean;
 	allowMultipleClaimsOfSameArchetype: boolean;
+	claimsNote: string | null;
 	validClasses: [string, ...string[]];
 }>;
 

@@ -23,6 +23,7 @@ export const configuration: AppConfiguration = {
 
 	secondaryClaims: true,
 	allowMultipleClaimsOfSameArchetype: false,
+	claimsNote: null,
 
 	validClasses: [
 		"I.A4",

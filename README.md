@@ -92,6 +92,7 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
 
         secondaryClaims: true, // Kromě primárních přednášek i sekundární přednášky
         allowMultipleClaimsOfSameArchetype: false, // Povolit přihlášení stejné přednášky ve více blocích
+        claimsNote: "Informace zobrazovaná účastníkům při výběru přednášek.",
 
         validClasses: [
             "I.A4",
@@ -105,7 +106,6 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
 
 4.  Nastavte ikonu aplikace `configuration/icon.tsx`
     Můžete využít `configuration/icon.example.tsx` - Pokud používáte svojí, aktualizujte i příslušné soubory:
-
     - `app/icon.png`
     - `app/icon-apple.png`
 
