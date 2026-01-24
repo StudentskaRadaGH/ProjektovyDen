@@ -94,6 +94,9 @@ Generováno algoritmem na základě přihlášek odevzdaných účastníky. Do r
         allowMultipleClaimsOfSameArchetype: false, // Povolit přihlášení stejné přednášky ve více blocích
         claimsNote: "Informace zobrazovaná účastníkům při výběru přednášek.",
 
+    	enableScheduleSince: new Date("2025-01-30T09:00:00Z"), // Od kdy zobrazovat účastníkům harmonogram akce
+        showEntireSchedule: false, // Zobrazit celý harmonogram akce a ne pouze nejbližší blok
+
         validClasses: [
             "I.A4",
             "I.B4",

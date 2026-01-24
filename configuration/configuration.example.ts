@@ -25,6 +25,9 @@ export const configuration: AppConfiguration = {
 	allowMultipleClaimsOfSameArchetype: false,
 	claimsNote: null,
 
+	enableScheduleSince: new Date("2025-01-30T09:00:00Z"), // UTC
+	showEntireSchedule: false,
+
 	validClasses: [
 		"I.A4",
 		"I.B4",
