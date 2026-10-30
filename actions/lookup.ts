@@ -65,6 +65,7 @@ export const recalculateBlockArchetypeLookup = async () => {
 				columns: {
 					block: true,
 					capacity: true,
+					span: true,
 				},
 			},
 		},
@@ -99,6 +100,7 @@ export const recalculateBlockArchetypeLookup = async () => {
 					archetype: archetype.id,
 					freeSpace: capacity - numOfClaims,
 					capacity: capacity,
+					span: Math.max(1, ...events.map((e) => e.span)),
 				};
 			})
 		)

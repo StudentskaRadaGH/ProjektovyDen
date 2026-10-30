@@ -61,6 +61,8 @@ export const events = pgTable(
             .references(() => places.id),
         attending: integer("attending").notNull().default(0),
         capacity: integer("capacity").notNull(),
+        // Kolik po sobě jdoucích bloků přednáška zabírá (1 = běžná přednáška)
+        span: integer("span").notNull().default(1),
     },
     (table) => [
         index("event_block_index").on(table.block),
@@ -141,6 +143,8 @@ export const blockArchetypeLookup = pgTable(
             .references(() => archetypes.id),
         freeSpace: integer("free_space").notNull(),
         capacity: integer("capacity").notNull(),
+        // Délka přednášky v blocích (stejná pro všechny eventy typu v daném bloku)
+        span: integer("span").notNull().default(1),
     },
     (table) => [
         uniqueIndex("lookup_block_archetype_index").on(

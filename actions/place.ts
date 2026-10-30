@@ -12,6 +12,7 @@ import { session, validateUser } from "@/auth/session";
 
 import { Place } from "@/lib/types";
 import { UserErrorType } from "@/lib/utilityTypes";
+import { getCoveredBlockIds } from "@/lib/eventSpan";
 import { revalidatePath } from "next/cache";
 
 export const addPlace = async (unsafe: addPlaceSchema) => {
@@ -86,6 +87,7 @@ export const deletePlace = async (id: number) => {
 export const getPossiblePlacesForEvent = async (
     blockId: number,
     eventId: number | null = null,
+    span: number = 1,
 ): Promise<UserErrorType | Place[]> => {
     const user = await session();
 
@@ -97,18 +99,31 @@ export const getPossiblePlacesForEvent = async (
 
     if (!block) return UserError("Neplatné ID bloku");
 
+    const allBlocks = await db.query.blocks.findMany({
+        columns: { id: true, from: true },
+    });
+
+    const covered = getCoveredBlockIds(allBlocks, blockId, Math.max(1, span));
+
     return (
         await db.query.places.findMany({
             with: {
                 events: {
                     columns: {
                         id: true,
+                        block: true,
+                        span: true,
                     },
-                    where: eq(events.block, blockId),
                 },
             },
         })
-    ).filter(
-        (place) => place.events.length === 0 || place.events[0].id === eventId,
+    ).filter((place) =>
+        place.events.every(
+            (e) =>
+                e.id === eventId ||
+                !getCoveredBlockIds(allBlocks, e.block, e.span).some((id) =>
+                    covered.includes(id),
+                ),
+        ),
     );
 };

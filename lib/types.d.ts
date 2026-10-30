@@ -68,6 +68,7 @@ export type Event = {
 	place: Place;
 	attending: number;
 	capacity: number;
+	span: number;
 };
 
 export type Interest = {

@@ -1,7 +1,7 @@
 "use server";
 
 import { Archetype, Block, Event, Place } from "@/lib/types";
-import { claims as Claims, users as Users, attendance, db, eq } from "@/db";
+import { claims as Claims, blocks as Blocks, users as Users, asc, attendance, db, eq } from "@/db";
 import { UnauthorizedError, createMapById } from "@/lib/utils";
 import { session, validateUser } from "@/auth/session";
 
@@ -26,15 +26,19 @@ export const generateAttendances = async () => {
     });
 
     const blocks = await db.query.blocks.findMany({
+        orderBy: asc(Blocks.from),
         with: {
             events: true,
         },
     });
 
-    for await (const block of blocks) {
+    // Uživatel, který je kvůli delší přednášce (dvojbloku) obsazený až do bloku s tímto indexem (bez něj)
+    const busyUntil = new Map<number, number>();
+
+    for await (const [blockIndex, block] of blocks.entries()) {
         const eventsByArchetype = new Map<
             Archetype["id"],
-            (Pick<Event, "id" | "capacity" | "attending"> & {
+            (Pick<Event, "id" | "capacity" | "attending" | "span"> & {
                 archetype: Archetype["id"];
                 block: Block["id"];
                 place: Place["id"];
@@ -43,6 +47,7 @@ export const generateAttendances = async () => {
 
         const eventPercentage = new Map<Event["id"], number>();
         const eventPercentPointPerUser = new Map<Event["id"], number>();
+        const eventSpan = new Map<Event["id"], number>();
 
         const attendances: {
             user: number;
@@ -57,6 +62,7 @@ export const generateAttendances = async () => {
                 id: event.id,
                 capacity: event.capacity,
                 attending: 0,
+                span: event.span,
                 archetype: event.archetype,
                 block: event.block,
                 place: event.place,
@@ -64,11 +70,21 @@ export const generateAttendances = async () => {
 
             eventPercentage.set(event.id, 0);
             eventPercentPointPerUser.set(event.id, 1 / event.capacity);
+            eventSpan.set(event.id, event.span);
         });
+
+        const markBusy = (userId: number, eventId: number) => {
+            const span = eventSpan.get(eventId) ?? 1;
+
+            if (span > 1) busyUntil.set(userId, blockIndex + span);
+        };
 
         const usersWithoutClaim: typeof attendees = [];
 
         attendees.forEach((user) => {
+            // Uživatel je stále na delší přednášce z předchozího bloku
+            if ((busyUntil.get(user.id) ?? 0) > blockIndex) return;
+
             const claim = user.claims.find((claim) => claim.block === block.id);
 
             if (!claim) {
@@ -86,6 +102,8 @@ export const generateAttendances = async () => {
                 event: chosenEvent.id,
             });
 
+            markBusy(claim.user, chosenEvent.id);
+
             eventPercentage.set(
                 chosenEvent.id,
                 eventPercentage.get(chosenEvent.id)! +
@@ -94,8 +112,22 @@ export const generateAttendances = async () => {
         });
 
         usersWithoutClaim.forEach((user) => {
-            const eventWithLowestPercentage = Array.from(
-                eventPercentage,
+            // Delší přednáška nesmí zasáhnout do bloku, kde má uživatel vlastní volbu (nebo za poslední blok)
+            const compatibleEvents = Array.from(eventPercentage).filter(([id]) => {
+                for (let offset = 1; offset < (eventSpan.get(id) ?? 1); offset++) {
+                    const nextBlock = blocks[blockIndex + offset];
+
+                    if (!nextBlock || user.claims.some((c) => c.block === nextBlock.id))
+                        return false;
+                }
+
+                return true;
+            });
+
+            const eventWithLowestPercentage = (
+                compatibleEvents.length > 0
+                    ? compatibleEvents
+                    : Array.from(eventPercentage)
             ).reduce(
                 (acc, [id, percentage]) =>
                     percentage < acc.percentage ? { id, percentage } : acc,
@@ -107,6 +139,8 @@ export const generateAttendances = async () => {
                 event: eventWithLowestPercentage.id,
             });
 
+            markBusy(user.id, eventWithLowestPercentage.id);
+
             eventPercentage.set(
                 eventWithLowestPercentage.id,
                 eventWithLowestPercentage.percentage +
@@ -114,7 +148,8 @@ export const generateAttendances = async () => {
             );
         });
 
-        await db.insert(attendance).values(attendances);
+        if (attendances.length > 0)
+            await db.insert(attendance).values(attendances);
     }
 
     await recalculateAll();

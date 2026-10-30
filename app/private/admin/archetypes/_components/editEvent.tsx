@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import ServerActionButton from "@/components/utility/ServerActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ZodError } from "zod";
-import { getBlockName } from "@/validation/block";
+import { getBlockName, getEventBlock } from "@/validation/block";
 import { getPossiblePlacesForEvent } from "@/actions/place";
 import { toast } from "sonner";
 
@@ -54,6 +54,7 @@ const EditEvent = ({
     const [block, setBlock] = useState<number | null>(event?.block.id ?? null);
     const [place, setPlace] = useState<number | null>();
     const [capacity, setCapacity] = useState(event?.capacity ?? 0);
+    const [span, setSpan] = useState(event?.span ?? 1);
 
     const { action: createNew, pending: createNewPending } = useServerAction({
         action: createNewEvent,
@@ -93,6 +94,7 @@ const EditEvent = ({
                 block,
                 place,
                 capacity,
+                span,
             };
 
             const [safe, error] = inlineCatch(() =>
@@ -114,6 +116,7 @@ const EditEvent = ({
                 block,
                 place,
                 capacity,
+                span,
             };
 
             const [safe, error] = inlineCatch(() =>
@@ -136,6 +139,7 @@ const EditEvent = ({
         setBlock(event?.block.id ?? null);
         setPlace(event?.place.id ?? null);
         setCapacity(event?.capacity ?? 0);
+        setSpan(event?.span ?? 1);
     };
 
     const {
@@ -143,11 +147,11 @@ const EditEvent = ({
         refresh: refreshPossiblePlaces,
         returningInitial: possiblePlacesUpdating,
     } = fetchWithServerAction({
-        action: async (blockId: number | null) => {
+        action: async (blockId: number | null, eventSpan: number) => {
             if (blockId === null) return [];
 
             const [places, message] = catchUserError(
-                await getPossiblePlacesForEvent(blockId, event?.id),
+                await getPossiblePlacesForEvent(blockId, event?.id, eventSpan),
             );
 
             if (message) {
@@ -164,16 +168,25 @@ const EditEvent = ({
             return places;
         },
         initial: [],
-        initialArgs: [null],
+        initialArgs: [null, 1],
     });
+
+    const validSpan = Number.isInteger(span) && span >= 1 ? span : 1;
 
     useEffect(() => {
         if (!block) return;
 
         setPlace(place === undefined ? (event?.place.id ?? null) : null);
 
-        refreshPossiblePlaces(block);
+        refreshPossiblePlaces(block, validSpan);
     }, [block]);
+
+    // Při změně délky se musí znovu načíst volná místa ve všech zabraných blocích
+    useEffect(() => {
+        if (!block) return;
+
+        refreshPossiblePlaces(block, validSpan);
+    }, [validSpan]);
 
     return (
         <Card>
@@ -189,6 +202,19 @@ const EditEvent = ({
                                 value={capacity}
                                 onChange={(e) =>
                                     setCapacity(parseInt(e.target.value))
+                                }
+                            />
+                        </label>
+                        <label className="flex flex-col gap-2">
+                            <b>Délka (počet bloků):</b>
+                            <Input
+                                type="number"
+                                className="input"
+                                min={1}
+                                step={1}
+                                value={span}
+                                onChange={(e) =>
+                                    setSpan(parseInt(e.target.value))
                                 }
                             />
                         </label>
@@ -271,7 +297,9 @@ const EditEvent = ({
                 <>
                     <CardHeader>
                         <CardTitle className="relative flex items-center justify-between text-lg">
-                            {getBlockName(event.block)}
+                            {getBlockName(
+                                getEventBlock(event.block, event.span, blocks),
+                            )}
                             <Button
                                 size="icon"
                                 variant="outline"
@@ -287,6 +315,9 @@ const EditEvent = ({
                             <div>
                                 <MapPin /> Místo: {event.place.name}
                             </div>
+                            {event.span > 1 && (
+                                <div>Počet bloků: {event.span}</div>
+                            )}
                         </CardDescription>
                     </CardHeader>
                 </>

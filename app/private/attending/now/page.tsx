@@ -1,8 +1,9 @@
-import { attendance as Attendance, db, eq } from "@/db";
+import { attendance as Attendance, asc, blocks as Blocks, db, eq } from "@/db";
 
 import { NextPage } from "next";
 import NowClientPage from "./_components/clientPage";
 import { configuration } from "@/configuration/configuration";
+import { getEventBlock } from "@/validation/block";
 import { session } from "@/auth/session";
 
 const NowAttendingPage: NextPage = async () => {
@@ -17,6 +18,10 @@ const NowAttendingPage: NextPage = async () => {
 			/>
 		);
 
+	const allBlocks = await db.query.blocks.findMany({
+		orderBy: asc(Blocks.from),
+	});
+
 	const attendances = (
 		await db.query.attendance.findMany({
 			where: eq(Attendance.user, user.id),
@@ -30,7 +35,13 @@ const NowAttendingPage: NextPage = async () => {
 				},
 			},
 		})
-	).sort((a, b) => a.event.block.from.getTime() - b.event.block.from.getTime());
+	)
+		// Delší přednáška (dvojblok) končí až koncem posledního bloku, který zabírá
+		.map((a) => ({
+			...a,
+			event: Object.assign({}, a.event, { block: getEventBlock(a.event.block, a.event.span, allBlocks) }),
+		}))
+		.sort((a, b) => a.event.block.from.getTime() - b.event.block.from.getTime());
 
 	const endsAt = attendances.length > 0 ? attendances[attendances.length - 1].event.block.to : null;
 

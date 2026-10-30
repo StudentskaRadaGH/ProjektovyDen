@@ -2,8 +2,8 @@
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Archetype, Block } from "@/lib/types";
+import { BlocksState, getBlocksState, saveClaims } from "@/actions/claim";
 import { fetchWithServerAction, useServerAction } from "@/hooks/use-server-action";
-import { getBlocksState, saveClaims } from "@/actions/claim";
 import { use, useState } from "react";
 
 import BlockElement from "./block";
@@ -23,6 +23,33 @@ export interface BlockClaims {
 		secondary: Archetype["id"] | null;
 	};
 }
+
+/**
+ * Bloky, které jsou obsazené delší přednáškou (dvojblokem) vybranou v některém z předchozích bloků.
+ * Klíč je ID zamčeného bloku, hodnota je název přednášky, která ho zabírá.
+ */
+const getLockedBlocks = (blockState: BlocksState, claims: BlockClaims) => {
+	const locked = new Map<Block["id"], string>();
+
+	let lockedUntil = 0;
+	let lockedBy = "";
+
+	blockState.forEach((block, index) => {
+		if (index < lockedUntil) {
+			locked.set(block.id, lockedBy);
+			return;
+		}
+
+		const chosen = block.archetypes.find((a) => a.id === claims[block.id]?.primary);
+
+		if (chosen && chosen.span > 1) {
+			lockedUntil = index + chosen.span;
+			lockedBy = chosen.name;
+		}
+	});
+
+	return locked;
+};
 
 const ClientClaims = () => {
 	const user = use(UserContext);
@@ -75,25 +102,38 @@ const ClientClaims = () => {
 		onSuccess: () => refreshData(false),
 	});
 
+	const lockedBlocks = getLockedBlocks(blockState, claims);
+
 	const save = () => {
-		if (blockState.some((b) => claims[b.id].primary === null)) {
+		const freeBlocks = blockState.filter((b) => !lockedBlocks.has(b.id));
+
+		if (freeBlocks.some((b) => claims[b.id].primary === null)) {
 			toast.warning("Vyberte primární přednášku pro všechny bloky");
 
 			return;
 		}
 
-		if (configuration.secondaryClaims && blockState.some((b) => claims[b.id].secondary === null)) {
+		if (configuration.secondaryClaims && freeBlocks.some((b) => claims[b.id].secondary === null)) {
 			toast.warning("Vyberte sekundární přednášku pro všechny bloky");
 
 			return;
 		}
 
 		saveAction(
-			blockState.map((b) => ({
-				block: b.id,
-				primaryArchetype: claims[b.id].primary!,
-				secondaryArchetype: claims[b.id].secondary ?? undefined,
-			})),
+			blockState.map((b) =>
+				lockedBlocks.has(b.id)
+					? {
+							// Blok je obsazený delší přednáškou, případná dřívější volba se smaže
+							block: b.id,
+							primaryArchetype: null,
+							secondaryArchetype: null,
+						}
+					: {
+							block: b.id,
+							primaryArchetype: claims[b.id].primary!,
+							secondaryArchetype: claims[b.id].secondary ?? undefined,
+						},
+			),
 		);
 	};
 
@@ -109,7 +149,7 @@ const ClientClaims = () => {
 		if (
 			!configuration.allowMultipleClaimsOfSameArchetype &&
 			blockState.some((b) => {
-				if (b.id === blockId) return false;
+				if (b.id === blockId || lockedBlocks.has(b.id)) return false;
 
 				if (newClaims.primary !== null && claims[b.id].primary === newClaims.primary) {
 					toast.warning("Nelze vybrat 2 stejné primární přednášky");
@@ -163,6 +203,7 @@ const ClientClaims = () => {
 							claims={claims[block.id]}
 							onClaimsChange={(newClaims) => updateClaims(block.id, newClaims)}
 							disabled={!canEditClaims}
+							lockedBy={lockedBlocks.get(block.id)}
 						/>
 					))}
 				</>

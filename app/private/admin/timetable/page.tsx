@@ -59,18 +59,46 @@ const TimetablePage: NextPage = async () => {
                         <div className="flex size-full max-w-80 items-center bg-secondary px-4 py-2 text-secondary-foreground">
                             {archetype.name}
                         </div>
-                        {blocks.map((block) => (
-                            <div key={block.id}>
-                                {archetype.events
-                                    .filter((e) => e.block === block.id)
-                                    .map((event) => (
+                        {blocks.map((block, blockIndex) => {
+                            const blockEvents = archetype.events.filter(
+                                (e) => e.block === block.id,
+                            );
+
+                            // Blok je zabrán delší přednáškou z předchozího bloku
+                            const isCovered = archetype.events.some((e) => {
+                                const startIndex = blocks.findIndex(
+                                    (b) => b.id === e.block,
+                                );
+
+                                return (
+                                    startIndex < blockIndex &&
+                                    startIndex + e.span > blockIndex
+                                );
+                            });
+
+                            if (isCovered) return null;
+
+                            const span = Math.max(
+                                1,
+                                ...blockEvents.map((e) => e.span),
+                            );
+
+                            return (
+                                <div
+                                    key={block.id}
+                                    style={{
+                                        gridColumn: `span ${Math.min(span, blocks.length - blockIndex)}`,
+                                    }}
+                                >
+                                    {blockEvents.map((event) => (
                                         <EventDetails
                                             key={event.id}
                                             event={event}
                                         />
                                     ))}
-                            </div>
-                        ))}
+                                </div>
+                            );
+                        })}
                     </Fragment>
                 ))}
             </div>
