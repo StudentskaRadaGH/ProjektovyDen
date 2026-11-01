@@ -219,7 +219,7 @@ const EditEvent = ({
                             />
                         </label>
                         <label className="flex flex-col gap-2">
-                            <b>Blok:</b>
+                            <b>Počáteční blok:</b>
                             <ComboBox
                                 className="w-auto"
                                 value={block}
