@@ -8,13 +8,13 @@ import {
     View,
     renderToStream,
 } from "@react-pdf/renderer";
-import { events as Events, db } from "@/db";
+import { events as Events, asc, blocks as BlocksTable, db } from "@/db";
 import { NextRequest, NextResponse } from "next/server";
 import { UnauthorizedError, createMapById } from "@/lib/utils";
 import { session, validateUser } from "@/auth/session";
 
 import { configuration } from "@/configuration/configuration";
-import { getBlockName } from "@/validation/block";
+import { getBlockName, getEventBlock } from "@/validation/block";
 
 export async function GET(req: NextRequest) {
     const user = await session();
@@ -22,7 +22,11 @@ export async function GET(req: NextRequest) {
     if (!validateUser(user, { isAdmin: true }))
         return NextResponse.json(UnauthorizedError());
 
-    const blocks = createMapById(await db.query.blocks.findMany(), "id");
+    const blockList = await db.query.blocks.findMany({
+        orderBy: asc(BlocksTable.from),
+    });
+
+    const blocks = createMapById(blockList, "id");
 
     const archetypes = createMapById(
         await db.query.archetypes.findMany({
@@ -161,7 +165,13 @@ export async function GET(req: NextRequest) {
                             <View style={styles.headerInfo}>
                                 <Text>
                                     Blok:{" "}
-                                    {getBlockName(blocks.get(event.block)!)}
+                                    {getBlockName(
+                                        getEventBlock(
+                                            blocks.get(event.block)!,
+                                            event.span,
+                                            blockList,
+                                        ),
+                                    )}
                                 </Text>
                                 <Text>
                                     Učebna: {places.get(event.place)!.name}

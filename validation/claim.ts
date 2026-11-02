@@ -4,11 +4,15 @@ import { z } from "zod";
 export const saveClaimsSchema = z.array(
     z.object({
         block: z.number({ message: "ID bloku musí být číslo." }),
-        primaryArchetype: z.number({
-            message: "ID typu dílny musí být číslo.",
-        }),
+        // null = blok je obsazený delší přednáškou (dvojblokem) z předchozího bloku
+        primaryArchetype: z
+            .number({
+                message: "ID typu dílny musí být číslo.",
+            })
+            .nullable(),
         secondaryArchetype: z
             .number({ message: "ID typu dílny musí být číslo." })
+            .nullable()
             .optional(),
     }),
 );

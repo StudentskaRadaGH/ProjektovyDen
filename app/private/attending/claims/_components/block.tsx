@@ -16,6 +16,8 @@ type BlockElementProps = {
     claims: BlockClaims[Block["id"]];
     onClaimsChange: (claims: BlockClaims[Block["id"]]) => void;
     disabled?: boolean;
+    // Název delší přednášky z předchozího bloku, která tento blok zabírá
+    lockedBy?: string;
 } & Either<
     {},
     {
@@ -34,11 +36,31 @@ const BlockElement = ({
     claims,
     onClaimsChange,
     disabled,
+    lockedBy,
     admin,
     eventId,
     events,
     onEventChane,
 }: BlockElementProps) => {
+    if (lockedBy !== undefined)
+        return (
+            <Card key={block.id}>
+                <CardHeader>
+                    <CardTitle>{getBlockName(block)}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <ComboBox
+                        readonly
+                        className="w-auto"
+                        value={undefined}
+                        onChange={() => {}}
+                        placeholder={`Pokračuje přednáška: ${lockedBy}`}
+                        values={[]}
+                    />
+                </CardContent>
+            </Card>
+        );
+
     return (
         <Card key={block.id}>
             <CardHeader>
@@ -88,7 +110,7 @@ const BlockElement = ({
                             )
                             .map((a) => ({
                                 value: a.id.toString(),
-                                label: `${a.name} - ${pluralHelper(Math.max(a.spaceLeft, 0), "zbývá", "zbývají", "zbývá")} ${Math.max(a.spaceLeft, 0)} ${pluralHelper(Math.max(a.spaceLeft, 0), "místo", "místa", "míst")}`,
+                                label: `${a.name}${a.span > 1 ? ` (${a.span} ${pluralHelper(a.span, "blok", "bloky", "bloků")})` : ""} - ${pluralHelper(Math.max(a.spaceLeft, 0), "zbývá", "zbývají", "zbývá")} ${Math.max(a.spaceLeft, 0)} ${pluralHelper(Math.max(a.spaceLeft, 0), "místo", "místa", "míst")}`,
                             })),
                     ]}
                 />
@@ -122,9 +144,11 @@ const BlockElement = ({
                                 ...block.archetypes
                                     .filter(
                                         (a) =>
+                                            // Dlouhé přednášky nejdou zvolit jako záložní
+                                            (a.span <= 1 || admin) &&
                                             a.id !==
-                                            (claims?.primary ??
-                                                block.primaryClaim),
+                                                (claims?.primary ??
+                                                    block.primaryClaim),
                                     )
                                     .map((a) => ({
                                         value: a.id.toString(),

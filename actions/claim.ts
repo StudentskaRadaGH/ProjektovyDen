@@ -43,6 +43,7 @@ export type BlocksState = {
         name: string;
         spaceLeft: number;
         spaceTotal: number;
+        span: number;
     }[];
 }[];
 
@@ -92,6 +93,7 @@ const getBlockStateForUserId = async (
                 name: a.archetype.name,
                 spaceLeft: Math.max(a.freeSpace, 0),
                 spaceTotal: a.capacity,
+                span: a.span,
             })),
     }));
 };
@@ -338,6 +340,9 @@ export const saveClaims = async (unsafe: saveClaimsSchema) => {
     if (error) return UserError(error);
 
     for (const row of data) {
+        // Blok obsazený delší přednáškou z předchozího bloku
+        if (row.primaryArchetype === null) continue;
+
         if (configuration.secondaryClaims) {
             if (
                 !configuration.allowMultipleClaimsOfSameArchetype &&

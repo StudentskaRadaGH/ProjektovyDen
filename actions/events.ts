@@ -5,7 +5,9 @@ import { UnauthorizedError, UserError, inlineCatch } from "@/lib/utils";
 import {
     and,
     archetypes,
+    asc,
     blockArchetypeLookup,
+    blocks as blocksTable,
     db,
     eq,
     events,
@@ -18,10 +20,56 @@ import { createNewEventSchema, editEventSchema } from "@/validation/events";
 import { session, validateUser } from "@/auth/session";
 
 import { UserErrorType } from "@/lib/utilityTypes";
+import { getCoveredBlockIds } from "@/lib/eventSpan";
 import { recalculateBlockArchetypeLookup } from "./lookup";
 import { revalidatePath } from "next/cache";
 
 export type EditEventDetails = Omit<Event, "archetype">;
+
+/**
+ * Zkontroluje, že přednáška (i dvojblok) může být v daných blocích a místě.
+ * Vrací text chyby, nebo null, pokud je vše v pořádku.
+ */
+const checkEventSlot = async (slot: {
+    eventId: number | null;
+    archetype: number;
+    block: number;
+    place: number;
+    span: number;
+}): Promise<string | null> => {
+    const allBlocks = await db.query.blocks.findMany({
+        columns: { id: true, from: true },
+        orderBy: asc(blocksTable.from),
+    });
+
+    const covered = getCoveredBlockIds(allBlocks, slot.block, slot.span);
+
+    if (covered.length < slot.span)
+        return "Přednáška by přesahovala poslední existující blok";
+
+    const others = (
+        await db.query.events.findMany({
+            columns: { id: true, block: true, span: true, place: true, archetype: true },
+        })
+    ).filter((e) => e.id !== slot.eventId);
+
+    for (const other of others) {
+        const otherCovered = getCoveredBlockIds(allBlocks, other.block, other.span);
+
+        if (!otherCovered.some((id) => covered.includes(id))) continue;
+
+        if (other.place === slot.place)
+            return "Zvolené místo je v některém z bloků přednášky již obsazené";
+
+        if (
+            other.archetype === slot.archetype &&
+            !(other.block === slot.block && other.span === slot.span)
+        )
+            return "Přednášky stejného typu se nemohou časově překrývat, pokud nezačínají ve stejném bloku a nemají stejnou délku";
+    }
+
+    return null;
+};
 
 export const createNewEvent = async (unsafe: createNewEventSchema) => {
     const user = await session();
@@ -49,19 +97,20 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
     // Place
     const place = await db.query.places.findFirst({
         where: eq(places.id, data.place),
-        with: {
-            events: {
-                columns: {
-                    id: true,
-                },
-                where: eq(events.block, data.block),
-                limit: 1,
-            },
-        },
     });
 
-    if (!place || place.events.length > 0)
-        return UserError("Neplatné ID místa");
+    if (!place) return UserError("Neplatné ID místa");
+
+    // Místo, blok(y) a překryv s ostatními přednáškami
+    const slotError = await checkEventSlot({
+        eventId: null,
+        archetype: data.archetype,
+        block: data.block,
+        place: data.place,
+        span: data.span,
+    });
+
+    if (slotError) return UserError(slotError);
 
     const inserted_id = (
         await db
@@ -71,6 +120,7 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
                 block: data.block,
                 place: data.place,
                 capacity: data.capacity,
+                span: data.span,
             })
             .returning({ insertedId: events.id })
     )[0].insertedId;
@@ -82,6 +132,7 @@ export const createNewEvent = async (unsafe: createNewEventSchema) => {
         .set({
             capacity: sql`${blockArchetypeLookup.capacity} + ${data.capacity}`,
             freeSpace: sql`${blockArchetypeLookup.freeSpace} + ${data.capacity}`,
+            span: data.span,
         })
         .where(
             and(
@@ -122,19 +173,26 @@ export const editEvent = async (unsafe: editEventSchema) => {
     if (event.place !== data.place) {
         const place = await db.query.places.findFirst({
             where: eq(places.id, data.place),
-            with: {
-                events: {
-                    columns: {
-                        id: true,
-                    },
-                    where: eq(events.block, data.block),
-                    limit: 1,
-                },
-            },
         });
 
-        if (!place || place.events.length > 0)
-            return UserError("Neplatné ID místa");
+        if (!place) return UserError("Neplatné ID místa");
+    }
+
+    // Místo, blok(y) a překryv s ostatními přednáškami
+    if (
+        event.place !== data.place ||
+        event.block !== data.block ||
+        event.span !== data.span
+    ) {
+        const slotError = await checkEventSlot({
+            eventId: event.id,
+            archetype: event.archetype,
+            block: data.block,
+            place: data.place,
+            span: data.span,
+        });
+
+        if (slotError) return UserError(slotError);
     }
 
     await db
@@ -143,10 +201,15 @@ export const editEvent = async (unsafe: editEventSchema) => {
             block: data.block,
             place: data.place,
             capacity: data.capacity,
+            span: data.span,
         })
         .where(eq(events.id, data.id));
 
-    if (data.capacity !== event.capacity || data.block !== event.block)
+    if (
+        data.capacity !== event.capacity ||
+        data.block !== event.block ||
+        data.span !== event.span
+    )
         await recalculateBlockArchetypeLookup();
 
     revalidatePath("/admin/archetypes");
@@ -199,6 +262,7 @@ export const getArchetypeEvents = async (
             id: true,
             capacity: true,
             attending: true,
+            span: true,
         },
         with: {
             block: true,

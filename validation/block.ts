@@ -42,3 +42,24 @@ export const getBlockName = (block: { from: Date; to: Date }) => {
 
 	return `${printDateTime(block.from)} - ${printDateTime(block.to)}`;
 };
+
+/**
+ * Vrátí blok, jehož konec odpovídá poslednímu bloku, který přednáška
+ * se zadaným `span` zabírá (pro běžné přednášky vrací původní blok).
+ */
+export const getEventBlock = <T extends { id: number; from: Date; to: Date }>(
+	block: T,
+	span: number,
+	allBlocks: { id: number; from: Date; to: Date }[]
+): T => {
+	if (span <= 1) return block;
+
+	const sorted = [...allBlocks].sort((a, b) => a.from.getTime() - b.from.getTime());
+	const index = sorted.findIndex((b) => b.id === block.id);
+
+	if (index === -1) return block;
+
+	const last = sorted[Math.min(index + span - 1, sorted.length - 1)];
+
+	return { ...block, to: last.to };
+};
